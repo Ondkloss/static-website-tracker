@@ -7,7 +7,8 @@ export async function sendMail(
     from: string,
     to: string,
     subject: string,
-    text: string,
+    text: string | undefined,
+    html: string | undefined = undefined,
     ignoreTLS = false,
 ): Promise<SentMessageInfo> {
     const transporter = nodemailer.createTransport({
@@ -22,6 +23,7 @@ export async function sendMail(
         to,
         subject,
         text,
+        html,
     });
 
     return info;

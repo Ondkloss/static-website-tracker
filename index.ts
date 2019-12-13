@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { Agent } from 'https';
 import { sep, dirname } from 'path';
 import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
+import { AllHtmlEntities } from 'html-entities';
 import fetch from 'node-fetch';
 import HttpsProxyAgent from 'https-proxy-agent';
 // @ts-ignore
@@ -17,18 +18,21 @@ class DiffResult {
     changed: boolean;
     diff?: Diff.Change[];
     message?: string;
+    messageHtml?: string;
 
     constructor(
         url: string,
         created: boolean,
         changed: boolean,
         message?: string,
+        messageHtml?: string,
         diff: Diff.Change[] | undefined = undefined,
     ) {
         this.url = url;
         this.created = created;
         this.changed = changed;
         this.message = message;
+        this.messageHtml = messageHtml;
         this.diff = diff;
     }
 }
@@ -72,6 +76,52 @@ function filenameify(url: string): string {
         .digest('hex');
 }
 
+function hasChanges(diff: Diff.Change[]): boolean {
+    return diff.some(change => change.added || change.removed);
+}
+
+function textify(diff: Diff.Change[]): string {
+    const changes: string[] = [];
+
+    diff.forEach(function(part) {
+        if (part.added || part.removed) {
+            const color = part.added ? '+' : part.removed ? '-' : '';
+            changes.push(color + part.value);
+        }
+    });
+
+    return changes.join('\n');
+}
+
+function htmlify(diff: Diff.Change[]): string {
+    const changes: string[] = [];
+
+    diff.forEach(function(part) {
+        const entities = new AllHtmlEntities();
+        if (part.added) {
+            changes.push(
+                '<font color="green">+' +
+                    entities
+                        .encode(part.value)
+                        .replace(/\r\n/g, '<br/>')
+                        .replace(/\n/g, '<br/>') +
+                    '</font>',
+            );
+        } else if (part.removed) {
+            changes.push(
+                '<font color="red">-' +
+                    entities
+                        .encode(part.value)
+                        .replace(/\r\n/g, '<br/>')
+                        .replace(/\n/g, '<br/>') +
+                    '</font>',
+            );
+        }
+    });
+
+    return changes.join('<br/>');
+}
+
 function selectProxyAgent(): Agent {
     if (process.env.pac_proxy) {
         return PacProxyAgent(process.env.pac_proxy);
@@ -109,25 +159,15 @@ export async function processDiffForUrl(url: string): Promise<DiffResult> {
     if (pathExists(basefile)) {
         const base = readFile(basefile);
         const diff = Diff.diffLines(base, text);
-        const changes: string[] = [];
 
-        diff.forEach(function(part) {
-            if (part.added || part.removed) {
-                const color = part.added ? '+' : part.removed ? '-' : '';
-                changes.push(color + part.value);
-            }
-        });
-
-        if (changes.length > 0) {
-            for (const change of changes) {
-                console.log(change);
-            }
+        if (hasChanges(diff)) {
+            console.log(textify(diff));
             console.log(`Changes detected and rewriting ${basefile} file for ${url}.`);
             writeFile(basefile, text);
-            return new DiffResult(url, false, true, changes.join('\n'), diff);
+            return new DiffResult(url, false, true, textify(diff), htmlify(diff), diff);
         } else {
             console.log(`No differences detected for ${url}.`);
-            return new DiffResult(url, false, false, `No differences detected for ${url}.`, diff);
+            return new DiffResult(url, false, false, `No differences detected for ${url}.`, undefined, diff);
         }
     } else {
         console.log(`Writing initial ${basefile} file for ${url}.`);

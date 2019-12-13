@@ -15,7 +15,8 @@ schedule.scheduleJob('0 * * * *', function() {
                         'from@example.com',
                         'to@example.com',
                         `Diff in ${diffResult.url}`,
-                        diffResult.message || '',
+                        diffResult.message,
+                        diffResult.messageHtml,
                     ).catch(reason => console.error(reason));
                 }
             }
