@@ -10,6 +10,7 @@
   "author": "Halvor Holsten Strand",
   "license": "MIT",
   "dependencies": {
+    "argparse": "^1.0.10",
     "diff": "^4.0.1",
     "html-entities": "^1.2.1",
     "https-proxy-agent": "^3.0.1",
@@ -19,6 +20,7 @@
     "pac-proxy-agent": "^3.0.1"
   },
   "devDependencies": {
+    "@types/argparse": "^1.0.36",
     "@types/diff": "^4.0.2",
     "@types/html-entities": "^1.2.16",
     "@types/node-fetch": "^2.5.3",

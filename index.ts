@@ -1,9 +1,10 @@
 import crypto from 'crypto';
 import { Agent } from 'https';
 import { sep, dirname } from 'path';
-import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'fs';
 import { AllHtmlEntities } from 'html-entities';
 import fetch from 'node-fetch';
+import { ArgumentParser } from 'argparse';
 import HttpsProxyAgent from 'https-proxy-agent';
 // @ts-ignore
 import PacProxyAgent from 'pac-proxy-agent';
@@ -11,6 +12,12 @@ import * as Diff from 'diff';
 
 const DIFF_DIR = __dirname + sep + 'diff';
 const DIFF_URLS_FILE = DIFF_DIR + sep + '.urls';
+
+interface Arguments {
+    add?: string;
+    remove?: string;
+    urls: boolean;
+}
 
 class DiffResult {
     url: string;
@@ -83,7 +90,7 @@ function hasChanges(diff: Diff.Change[]): boolean {
 function textify(diff: Diff.Change[]): string {
     const changes: string[] = [];
 
-    diff.forEach(function(part) {
+    diff.forEach(function (part) {
         if (part.added || part.removed) {
             const color = part.added ? '+' : part.removed ? '-' : '';
             changes.push(color + part.value);
@@ -96,25 +103,25 @@ function textify(diff: Diff.Change[]): string {
 function htmlify(diff: Diff.Change[]): string {
     const changes: string[] = [];
 
-    diff.forEach(function(part) {
+    diff.forEach(function (part) {
         const entities = new AllHtmlEntities();
         if (part.added) {
             changes.push(
                 '<font color="green">+' +
-                    entities
-                        .encode(part.value)
-                        .replace(/\r\n/g, '<br/>')
-                        .replace(/\n/g, '<br/>') +
-                    '</font>',
+                entities
+                    .encode(part.value)
+                    .replace(/\r\n/g, '<br/>')
+                    .replace(/\n/g, '<br/>') +
+                '</font>',
             );
         } else if (part.removed) {
             changes.push(
                 '<font color="red">-' +
-                    entities
-                        .encode(part.value)
-                        .replace(/\r\n/g, '<br/>')
-                        .replace(/\n/g, '<br/>') +
-                    '</font>',
+                entities
+                    .encode(part.value)
+                    .replace(/\r\n/g, '<br/>')
+                    .replace(/\n/g, '<br/>') +
+                '</font>',
             );
         }
     });
@@ -122,12 +129,15 @@ function htmlify(diff: Diff.Change[]): string {
     return changes.join('<br/>');
 }
 
-function selectProxyAgent(): Agent {
+function selectProxyAgent(): Agent | undefined {
     if (process.env.pac_proxy) {
         return PacProxyAgent(process.env.pac_proxy);
     }
+    else if (process.env.https_proxy) {
+        return new HttpsProxyAgent(process.env.https_proxy);
+    }
 
-    return new HttpsProxyAgent(process.env.https_proxy ?? '');
+    return undefined;
 }
 
 export function getUrlsInDiffDir(): string[] {
@@ -189,17 +199,72 @@ export async function processDiffForUrls(): Promise<DiffResult[]> {
     return result;
 }
 
-function main(): void {
-    if (process.argv.length != 3) {
-        throw new Error('Missing argument');
+function removeUrl(value: string) {
+    const urls: string[] = readFileSync(DIFF_URLS_FILE, {
+        encoding: 'utf-8',
+    }).split('\n');
+
+    const result: string[] = [];
+
+    for (const url of urls) {
+        if (url !== value) {
+            result.push(url);
+        }
     }
 
-    if (process.argv[2] == '--urls') {
+    writeFile(DIFF_URLS_FILE, result.join('\n'));
+    const basefile = DIFF_DIR + sep + filenameify(value);
+    if (existsSync(basefile)) {
+        unlinkSync(basefile);
+    }
+
+    return result;
+}
+
+function argparser(): Arguments {
+    const parser = new ArgumentParser({
+        version: '1.0.0',
+        addHelp: true,
+        description: 'Dumb static website modification tracker'
+    });
+
+    const group = parser.addMutuallyExclusiveGroup();
+
+    group.addArgument(
+        ['-a', '--add'],
+        {
+            help: 'Add (or update) a URL'
+        }
+    );
+    group.addArgument(
+        ['-r', '--remove'],
+        {
+            help: 'Remove a URL'
+        }
+    );
+    group.addArgument(
+        '--urls',
+        {
+            action: 'storeTrue',
+            help: 'List URLs'
+        }
+    );
+    return parser.parseArgs();
+}
+
+function main(): void {
+    const args = argparser();
+
+    if (args.add) {
+        processDiffForUrl(args.add).catch(reason => console.log(reason));
+    }
+    else if (args.remove) {
+        removeUrl(args.remove);
+    }
+    else if (args.urls) {
         for (const url of getUrlsInDiffDir()) {
             console.log(url);
         }
-    } else {
-        processDiffForUrl(process.argv[2]).catch(reason => console.log(reason));
     }
 }
 

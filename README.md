@@ -6,16 +6,16 @@ Dumb static website modification tracker. The first time you run it against a we
 
 To run it directly from Typescript:
 
-    npx ts-node index.ts <website url>
+    npx ts-node index.ts -a <website url>
 
 To transpile and run from Javascript:
 
     npx tsc
-    node index.js <website url>
+    node index.js -a <website url>
 
 Example output:
 
-    $ node index.js http://example.com
+    $ node index.js -a http://example.com
     Writing initial /path/to/static-website-tracker/diff/f0e6a6a97042a4f1f1c87f5f7d44315b2d852c2df5c7991cc66241bf7072d1c4 file for http://example.com.
     $ node index.js --urls
     http://example.com
