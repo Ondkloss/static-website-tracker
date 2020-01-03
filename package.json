@@ -20,7 +20,7 @@
     "pac-proxy-agent": "^3.0.1"
   },
   "devDependencies": {
-    "@types/argparse": "^1.0.36",
+    "@types/argparse": "^1.0.38",
     "@types/diff": "^4.0.2",
     "@types/html-entities": "^1.2.16",
     "@types/node-fetch": "^2.5.3",

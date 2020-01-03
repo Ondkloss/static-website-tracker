@@ -4,7 +4,7 @@ import { sep, dirname } from 'path';
 import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'fs';
 import { AllHtmlEntities } from 'html-entities';
 import fetch from 'node-fetch';
-import { ArgumentParser } from 'argparse';
+import { ArgumentParser, Const } from 'argparse';
 import HttpsProxyAgent from 'https-proxy-agent';
 // @ts-ignore
 import PacProxyAgent from 'pac-proxy-agent';
@@ -92,7 +92,7 @@ function hasChanges(diff: Diff.Change[]): boolean {
 function textify(diff: Diff.Change[]): string {
     const changes: string[] = [];
 
-    diff.forEach(function(part) {
+    diff.forEach(function (part) {
         if (part.added || part.removed) {
             const color = part.added ? '+' : part.removed ? '-' : '';
             changes.push(color + part.value);
@@ -104,26 +104,26 @@ function textify(diff: Diff.Change[]): string {
 
 function htmlify(diff: Diff.Change[]): string {
     const changes: string[] = [];
+    const entities = new AllHtmlEntities();
 
-    diff.forEach(function(part) {
-        const entities = new AllHtmlEntities();
+    diff.forEach(function (part) {
         if (part.added) {
             changes.push(
                 '<font color="green">+' +
-                    entities
-                        .encode(part.value)
-                        .replace(/\r\n/g, '<br/>')
-                        .replace(/\n/g, '<br/>') +
-                    '</font>',
+                entities
+                    .encode(part.value)
+                    .replace(/\r\n/g, '<br/>')
+                    .replace(/\n/g, '<br/>') +
+                '</font>',
             );
         } else if (part.removed) {
             changes.push(
                 '<font color="red">-' +
-                    entities
-                        .encode(part.value)
-                        .replace(/\r\n/g, '<br/>')
-                        .replace(/\n/g, '<br/>') +
-                    '</font>',
+                entities
+                    .encode(part.value)
+                    .replace(/\r\n/g, '<br/>')
+                    .replace(/\n/g, '<br/>') +
+                '</font>',
             );
         }
     });
@@ -243,7 +243,7 @@ function argparser(): Arguments {
     });
     group.addArgument('--clean', {
         action: 'storeTrue',
-        help: '==SUPPRESS==',
+        help: Const.SUPPRESS,
     });
     return parser.parseArgs();
 }
