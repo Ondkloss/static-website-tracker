@@ -144,7 +144,7 @@ function selectProxyAgent(): Agent | undefined {
 export function getDiffUrls(): string[] {
     const urls: string[] = readFileSync(DIFF_URLS_FILE, {
         encoding: 'utf-8',
-    }).split('\n');
+    }).trim().split('\n');
 
     return urls;
 }
