@@ -1,13 +1,11 @@
 import crypto from 'crypto';
-import { Agent } from 'https';
 import { sep, dirname } from 'path';
 import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'fs';
 import { AllHtmlEntities } from 'html-entities';
 import fetch from 'node-fetch';
 import { ArgumentParser, Const } from 'argparse';
 import HttpsProxyAgent from 'https-proxy-agent';
-// @ts-ignore
-import PacProxyAgent from 'pac-proxy-agent';
+import { PacProxyAgent } from 'pac-proxy-agent';
 import * as Diff from 'diff';
 
 const DIFF_DIR = __dirname + sep + 'diff';
@@ -131,9 +129,9 @@ function htmlify(diff: Diff.Change[]): string {
     return changes.join('<br/>');
 }
 
-function selectProxyAgent(): Agent | undefined {
+function selectProxyAgent(): PacProxyAgent | HttpsProxyAgent | undefined {
     if (process.env.pac_proxy) {
-        return PacProxyAgent(process.env.pac_proxy);
+        return new PacProxyAgent(process.env.pac_proxy);
     } else if (process.env.https_proxy) {
         return new HttpsProxyAgent(process.env.https_proxy);
     }
