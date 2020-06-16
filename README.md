@@ -2,6 +2,10 @@
 
 Dumb static website modification tracker. The first time you run it against a website it stores the source. Every next time it runs a diff and reports any changes.
 
+## TLDR
+
+This is like a `diff` run as a `crontab` than sends an email.
+
 ## Running
 
 To run it directly from Typescript:
