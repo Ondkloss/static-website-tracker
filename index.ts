@@ -4,7 +4,7 @@ import { appendFileSync, existsSync, mkdirSync, writeFileSync, readFileSync, rea
 import { AllHtmlEntities } from 'html-entities';
 import fetch from 'node-fetch';
 import { ArgumentParser, Const } from 'argparse';
-import HttpsProxyAgent from 'https-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { PacProxyAgent } from 'pac-proxy-agent';
 import * as Diff from 'diff';
 

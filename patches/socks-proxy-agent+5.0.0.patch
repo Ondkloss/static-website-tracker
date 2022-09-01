@@ -1,0 +1,12 @@
+diff --git a/node_modules/socks-proxy-agent/dist/index.d.ts b/node_modules/socks-proxy-agent/dist/index.d.ts
+index eb92e04..1d2ee6e 100644
+--- a/node_modules/socks-proxy-agent/dist/index.d.ts
++++ b/node_modules/socks-proxy-agent/dist/index.d.ts
+@@ -8,6 +8,7 @@ declare namespace createSocksProxyAgent {
+     interface BaseSocksProxyAgentOptions {
+         host?: string | null;
+         port?: string | number | null;
++        path?: string | null;
+     }
+     export interface SocksProxyAgentOptions extends AgentOptions, BaseSocksProxyAgentOptions, Partial<Omit<Url & SocksProxy, keyof BaseSocksProxyAgentOptions>> {
+     }
